@@ -62,3 +62,12 @@ applicationSet:
 repositories:
   # Private repositories will be added during setup
   # This is configured in setup.sh
+
+# Image pull secrets for GHCR
+imagePullSecrets:
+  - name: regcred
+
+# Global image pull secrets
+global:
+  imagePullSecrets:
+    - name: regcred
