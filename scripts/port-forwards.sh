@@ -194,6 +194,8 @@ main() {
     # DynamoDB Local
     start_port_forward "dynamodb-local" "storage" "8000" "8000"
     
+    # Traefik (main entry point for local domains)
+    start_port_forward "traefik" "traefik" "80" "80"
     # Traefik dashboard
     start_port_forward "traefik" "traefik" "8085" "8081"
     

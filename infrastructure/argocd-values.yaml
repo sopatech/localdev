@@ -7,7 +7,7 @@ configs:
     # Enable insecure mode for local development
     server.insecure: "true"
     # Application namespaces
-    application.namespaces: "argocd,raidhelper-prod"
+    application.namespaces: "argocd,apps"
     # Enable application in any namespace
     application.instanceLabelKey: argocd.argoproj.io/instance
   rbac:
@@ -26,7 +26,7 @@ configs:
     # Enable insecure mode
     server.insecure: true
     # Application controller settings
-    application.namespaces: "argocd,raidhelper-prod"
+    application.namespaces: "argocd,apps"
 
 server:
   # Service configuration
@@ -43,7 +43,7 @@ server:
 controller:
   # Application controller settings
   extraArgs:
-    - --application-namespaces=argocd,raidhelper-prod
+    - --application-namespaces=argocd,apps
 
 repoServer:
   # Repository server settings
@@ -57,3 +57,8 @@ notifications:
 # ApplicationSet controller
 applicationSet:
   enabled: true
+
+# Repository configuration
+repositories:
+  # Private repositories will be added during setup
+  # This is configured in setup.sh

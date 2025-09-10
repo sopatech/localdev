@@ -60,6 +60,13 @@ The infrastructure components are optimized for local development:
    ```bash
    ./setup.sh
    ```
+   
+   The setup script will:
+   - Configure and start minikube
+   - Deploy all infrastructure (ArgoCD, Prometheus, LocalStack, etc.)
+   - Set up private repository access for ArgoCD
+   - Configure Docker registry secrets for private container images
+   - Deploy your applications
 
 3. **Start port-forwards**:
    ```bash

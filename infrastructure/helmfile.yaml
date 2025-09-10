@@ -27,10 +27,11 @@ releases:
   - name: cert-manager
     namespace: cert-manager
     chart: jetstack/cert-manager
-    version: v1.14.2
+    version: v1.18.2
     createNamespace: true
     values:
-      - installCRDs: true
+      - crds:
+          enabled: true
         global:
           leaderElection:
             namespace: cert-manager
@@ -46,7 +47,7 @@ releases:
   - name: traefik
     namespace: traefik
     chart: traefik/traefik
-    version: 26.0.0
+    version: 37.1.1
     createNamespace: true
     values:
       - traefik-values.yaml
@@ -79,7 +80,7 @@ releases:
   - name: prometheus
     namespace: monitoring
     chart: prometheus-community/prometheus
-    version: 25.8.2
+    version: 27.37.0
     createNamespace: true
     values:
       - prometheus-values.yaml
@@ -88,7 +89,7 @@ releases:
   - name: grafana
     namespace: monitoring
     chart: grafana/grafana
-    version: 7.3.0
+    version: 9.4.4
     createNamespace: true
     values:
       - grafana-values.yaml
@@ -117,7 +118,7 @@ releases:
   - name: argo
     namespace: argocd
     chart: argo/argo-cd
-    version: 6.0.0
+    version: 8.3.5
     createNamespace: true
     values:
       - argocd-values.yaml

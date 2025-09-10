@@ -1,6 +1,6 @@
 # RaidHelper Local Development Environment Makefile
 
-.PHONY: help setup delete telepresence-connect telepresence-disconnect port-forwards port-forwards-stop
+.PHONY: help setup delete setup-private-repos telepresence-connect telepresence-disconnect port-forwards port-forwards-stop
 
 # Default target
 help: ## Show this help message

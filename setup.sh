@@ -478,6 +478,150 @@ deploy_infrastructure() {
     log_success "Infrastructure deployed successfully!"
 }
 
+# Function to gather GitHub credentials
+gather_github_credentials() {
+    print_header "GITHUB CREDENTIALS SETUP"
+    
+    echo "🔐 GitHub Personal Access Token (PAT) Required"
+    echo "=============================================="
+    echo ""
+    echo "Your GitHub PAT will be used for:"
+    echo "  • ArgoCD to access private repositories (manifests-microservices)"
+    echo "  • Kubernetes to pull private container images from GitHub Container Registry (ghcr.io)"
+    echo ""
+    echo "Required GitHub PAT permissions:"
+    echo "  ✅ repo (Full control of private repositories)"
+    echo "  ✅ read:packages (Download packages from GitHub Package Registry)"
+    echo ""
+    echo "To create a PAT:"
+    echo "  1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)"
+    echo "  2. Click 'Generate new token (classic)'"
+    echo "  3. Select the permissions listed above"
+    echo "  4. Copy the generated token"
+    echo ""
+    
+    read -p "GitHub username: " GITHUB_USERNAME
+    read -s -p "GitHub Personal Access Token: " GITHUB_TOKEN
+    echo
+    
+    # Validate credentials by testing GitHub API
+    log_info "Validating GitHub credentials..."
+    if ! curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user | grep -q "\"login\""; then
+        log_error "Invalid GitHub credentials. Please check your username and token."
+        return 1
+    fi
+    
+    log_success "GitHub credentials validated successfully!"
+}
+
+# Function to setup private repositories
+setup_private_repositories() {
+    print_header "SETTING UP PRIVATE REPOSITORIES"
+    
+    log_info "Setting up private repository access for ArgoCD..."
+    
+    # Check if ArgoCD is running
+    if ! kubectl get pods -n argocd | grep -q "argo-argocd-server.*Running"; then
+        log_error "ArgoCD is not running. Cannot setup private repositories."
+        return 1
+    fi
+    
+    # Get ArgoCD admin password
+    log_info "Getting ArgoCD admin password..."
+    ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+    
+    # Wait for ArgoCD to be ready
+    log_info "Waiting for ArgoCD to be ready..."
+    kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=300s
+    
+    # Start port-forward for ArgoCD
+    log_info "Starting port-forward for ArgoCD..."
+    pkill -f "kubectl port-forward.*argo-argocd-server" || true
+    kubectl port-forward svc/argo-argocd-server -n argocd 8080:80 >/dev/null 2>&1 &
+    sleep 5
+    
+    # Login to ArgoCD
+    log_info "Logging into ArgoCD..."
+    if ! echo "y" | argocd login localhost:8080 --username admin --password "$ARGOCD_PASSWORD" --insecure; then
+        log_warn "ArgoCD CLI login failed. This might be due to version compatibility."
+        log_info "You can manually add the repository later using the ArgoCD UI at http://localhost:8080"
+        log_info "Or try updating ArgoCD CLI: brew upgrade argocd"
+        return 1
+    fi
+    
+    # Add private repositories
+    log_info "Adding private repositories..."
+    
+    # Check if manifests-microservices repository exists
+    if ! argocd repo list | grep -q "manifests-microservices"; then
+        log_info "Adding manifests-microservices repository..."
+        echo "Using GitHub credentials from previous step..."
+        
+        if ! argocd repo add https://github.com/sopatech/manifests-microservices \
+            --username "$GITHUB_USERNAME" \
+            --password "$GITHUB_TOKEN" \
+            --type git; then
+            log_error "Failed to add manifests-microservices repository"
+            return 1
+        fi
+        
+        log_success "Private repository added successfully!"
+    else
+        log_info "manifests-microservices repository already exists"
+    fi
+}
+
+# Function to setup Docker registry secrets
+setup_registry_secrets() {
+    print_header "SETTING UP DOCKER REGISTRY SECRETS"
+    
+    log_info "Setting up Docker registry secrets for private container images..."
+    
+    # Create namespaces if they don't exist
+    log_info "Creating namespaces..."
+    kubectl create namespace apps --dry-run=client -o yaml | kubectl apply -f -
+    kubectl create namespace jobs --dry-run=client -o yaml | kubectl apply -f -
+    
+    # Function to create registry secret
+    create_registry_secret() {
+        local namespace=$1
+        local secret_name="regcred"
+        
+        log_info "Setting up registry secret in namespace: $namespace"
+        
+        # Check if secret already exists
+        if kubectl get secret "$secret_name" -n "$namespace" &> /dev/null; then
+            log_info "Secret $secret_name already exists in namespace $namespace"
+            return 0
+        fi
+        
+        # Use GitHub credentials for GHCR
+        log_info "Using GitHub credentials for GitHub Container Registry (ghcr.io)"
+        local registry_url="ghcr.io"
+        local username="$GITHUB_USERNAME"
+        local password="$GITHUB_TOKEN"
+        
+        # Create the secret
+        if ! kubectl create secret docker-registry "$secret_name" \
+            --docker-server="$registry_url" \
+            --docker-username="$username" \
+            --docker-password="$password" \
+            --docker-email="$username@example.com" \
+            -n "$namespace"; then
+            log_error "Failed to create registry secret in namespace: $namespace"
+            return 1
+        fi
+        
+        log_success "Registry secret created in namespace: $namespace"
+    }
+    
+    # Create secrets for both namespaces
+    create_registry_secret "apps"
+    create_registry_secret "jobs"
+    
+    log_success "Docker registry secrets setup complete!"
+}
+
 # Function to get ArgoCD admin password
 get_argocd_password() {
     print_header "CONFIGURING ARGOCD"
@@ -560,6 +704,50 @@ EOF
     kill $port_forward_pid 2>/dev/null || true
 }
 
+# Function to setup local domains
+setup_local_domains() {
+    print_header "LOCAL DOMAINS SETUP"
+    
+    # Check if user wants to setup local domains
+    echo "🌐 Local Domain Setup"
+    echo "===================="
+    echo ""
+    echo "This will add local domains to your /etc/hosts file for easier development."
+    echo "Example: raidhelper.local, api.raidhelper.local, ws.raidhelper.local"
+    echo ""
+    
+    read -p "Setup local domains? [Y/n]: " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        log_info "Skipping local domains setup."
+        return 0
+    fi
+    
+    # Load configuration from file if it exists
+    if [ -f "config/local-domains.env" ]; then
+        log_info "Loading local domains configuration from config/local-domains.env"
+        source config/local-domains.env
+    fi
+    
+    # Set project-specific configuration
+    local project_name="${PROJECT_NAME:-raidhelper}"
+    local local_domain="${LOCAL_DOMAIN:-local}"
+    local services="${SERVICES:-web:80,api:8081,ws:8082}"
+    
+    log_info "Setting up local domains for project: $project_name"
+    log_info "Domain suffix: $local_domain"
+    log_info "Services: $services"
+    
+    # Run the local domains setup script
+    if [ -f "scripts/setup-local-domains.sh" ]; then
+        PROJECT_NAME="$project_name" LOCAL_DOMAIN="$local_domain" SERVICES="$services" \
+            ./scripts/setup-local-domains.sh add
+        log_success "Local domains setup complete!"
+    else
+        log_warn "Local domains setup script not found. Skipping."
+    fi
+}
+
 # Function to deploy RaidHelper applications
 deploy_applications() {
     print_header "DEPLOYING RAIDHELPER APPLICATIONS"
@@ -639,7 +827,11 @@ main() {
     check_requirements
     configure_minikube
     deploy_infrastructure
+    setup_local_domains
     get_argocd_password
+    gather_github_credentials
+    setup_private_repositories
+    setup_registry_secrets
     deploy_applications
     show_next_steps
     
