@@ -18,6 +18,9 @@ logs/
 *password*
 *token*
 
+# ArgoCD local configuration with sensitive data
+argocd-config.env
+
 # Kubernetes secrets and configs
 kubeconfig
 *.kubeconfig

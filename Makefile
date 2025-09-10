@@ -31,7 +31,7 @@ telepresence-disconnect: ## Disconnect telepresence
 # Port Forwards
 port-forwards: ## Start all port forwards
 	@echo "🔌 Starting port forwards..."
-	@./scripts/port-forwards.sh &
+	@./scripts/port-forwards.sh
 
 port-forwards-stop: ## Stop all port forwards
 	@echo "🔌 Stopping port forwards..."
