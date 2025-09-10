@@ -21,6 +21,10 @@ helmDefaults:
   timeout: 300
   recreatePods: false
   force: false
+  # Reduce verbosity
+  args:
+    - --quiet
+    - --suppress-diff
 
 releases:
   # Cert Manager (for certificates)

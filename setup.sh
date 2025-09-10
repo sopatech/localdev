@@ -760,7 +760,7 @@ deploy_applications() {
     fi
     
     log_info "Deploying RaidHelper applications via ArgoCD..."
-    kubectl apply -f ../manifests-microservices/applications/production/
+    kubectl apply -f ../manifests-microservices/applications/local/
     
     log_success "RaidHelper applications deployed!"
 }
