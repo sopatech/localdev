@@ -1,0 +1,124 @@
+# Global PodSecurityPolicy disable (deprecated in newer Kubernetes versions)
+podSecurityPolicy:
+  enabled: false
+
+loki:
+  enabled: true
+  
+  # Disable PodSecurityPolicy (deprecated in newer Kubernetes versions)
+  podSecurityPolicy:
+    enabled: false
+    
+  config:
+    auth_enabled: false
+    server:
+      http_listen_port: 3100
+      grpc_listen_port: 9095
+
+    common:
+      path_prefix: /loki
+      storage:
+        filesystem:
+          chunks_directory: /loki/chunks
+          rules_directory: /loki/rules
+      replication_factor: 1
+      ring:
+        instance_addr: 127.0.0.1
+        kvstore:
+          store: inmemory
+
+    query_range:
+      results_cache:
+        cache:
+          embedded_cache:
+            enabled: true
+            max_size_mb: 100
+
+    schema_config:
+      configs:
+        - from: 2020-10-24
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+
+    ruler:
+      alertmanager_url: http://localhost:9093
+
+  isDefault: false
+  url: http://{{(include "loki.serviceName" .)}}:{{ .Values.loki.service.port }}
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+  datasource:
+    jsonData: "{}"
+    uid: ""
+
+  service:
+    port: 3100
+    annotations: {}
+    labels: {}
+    type: ClusterIP
+
+  persistence:
+    enabled: false
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 25m
+      memory: 32Mi
+
+promtail:
+  enabled: true
+  
+  # Disable PodSecurityPolicy (deprecated in newer Kubernetes versions)
+  podSecurityPolicy:
+    enabled: false
+    
+  config:
+    logLevel: info
+    serverPort: 3101
+    clients:
+      - url: http://{{ include "loki.fullname" . }}:3100/loki/api/v1/push
+
+  resources:
+    limits:
+      cpu: 50m
+      memory: 32Mi
+    requests:
+      cpu: 25m
+      memory: 16Mi
+
+  # ServiceMonitor configuration for Prometheus monitoring
+  serviceMonitor:
+    enabled: false
+
+fluent-bit:
+  enabled: false
+
+grafana:
+  enabled: false
+  sidecar:
+    datasources:
+      enabled: false
+
+prometheus:
+  enabled: false
+
+filebeat:
+  enabled: false
+
+logstash:
+  enabled: false

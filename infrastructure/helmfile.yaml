@@ -1,0 +1,141 @@
+repositories:
+  - name: argo
+    url: https://argoproj.github.io/argo-helm
+  - name: traefik
+    url: https://traefik.github.io/charts
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: telepresence
+    url: https://app.getambassador.io
+  - name: nats
+    url: https://nats-io.github.io/k8s/helm/charts
+  - name: localstack
+    url: https://localstack.github.io/helm-charts
+
+helmDefaults:
+  wait: true
+  timeout: 300
+  recreatePods: false
+  force: false
+
+releases:
+  # Cert Manager (for certificates)
+  - name: cert-manager
+    namespace: cert-manager
+    chart: jetstack/cert-manager
+    version: v1.14.2
+    createNamespace: true
+    values:
+      - installCRDs: true
+        global:
+          leaderElection:
+            namespace: cert-manager
+
+  # Traefik CRDs (installed first)
+  - name: traefik-crds
+    namespace: traefik
+    chart: traefik/traefik-crds
+    version: 1.11.0
+    createNamespace: true
+
+  # Traefik (edge router)
+  - name: traefik
+    namespace: traefik
+    chart: traefik/traefik
+    version: 26.0.0
+    createNamespace: true
+    values:
+      - traefik-values.yaml
+    needs:
+      - traefik-crds
+
+  # NATS (messaging)
+  - name: nats
+    namespace: nats
+    chart: nats/nats
+    version: 1.3.13
+    createNamespace: true
+    values:
+      - nats-values.yaml
+
+  # NATS Surveyor (monitoring UI)
+  - name: nats-surveyor
+    namespace: nats
+    chart: nats/surveyor
+    version: 0.20.3
+    createNamespace: true
+    values:
+      - nats-surveyor-values.yaml
+    needs:
+      - nats
+
+  # Linkerd installed via CLI (see setup.sh)
+
+  # Prometheus (metrics)
+  - name: prometheus
+    namespace: monitoring
+    chart: prometheus-community/prometheus
+    version: 25.8.2
+    createNamespace: true
+    values:
+      - prometheus-values.yaml
+
+  # Grafana (visualization)
+  - name: grafana
+    namespace: monitoring
+    chart: grafana/grafana
+    version: 7.3.0
+    createNamespace: true
+    values:
+      - grafana-values.yaml
+    needs:
+      - prometheus
+
+  # Tempo (distributed tracing)
+  - name: tempo
+    namespace: monitoring
+    chart: grafana/tempo
+    version: 1.7.1
+    createNamespace: true
+    values:
+      - tempo-values.yaml
+
+  # Loki (log aggregation) - fixed PodSecurityPolicy issues
+  - name: loki
+    namespace: monitoring
+    chart: grafana/loki
+    version: 2.10.2
+    createNamespace: true
+    values:
+      - loki-values-simple.yaml
+
+  # ArgoCD (GitOps)
+  - name: argo
+    namespace: argocd
+    chart: argo/argo-cd
+    version: 6.0.0
+    createNamespace: true
+    values:
+      - argocd-values.yaml
+
+  # Telepresence (local development)
+  - name: traffic-manager
+    namespace: telepresence
+    chart: telepresence/telepresence
+    version: 2.18.0
+    createNamespace: true
+    values:
+      - telepresence-values.yaml
+
+  # LocalStack (includes DynamoDB Local)
+  - name: localstack
+    namespace: storage
+    chart: localstack/localstack
+    version: 0.6.26
+    createNamespace: true
+    values:
+      - localstack-values.yaml

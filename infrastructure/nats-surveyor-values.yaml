@@ -1,0 +1,31 @@
+# NATS Surveyor configuration for local development
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 7777
+
+# Resource limits
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi
+
+# NATS connection configuration
+nats:
+  servers:
+    - "nats://nats.nats.svc.cluster.local:4222"
+
+# Surveyor configuration
+surveyor:
+  # Enable JetStream monitoring
+  jetstream: true
+  
+  # Enable system monitoring
+  system: true
+  
+  # Enable account monitoring
+  accounts: true

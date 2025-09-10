@@ -1,0 +1,185 @@
+adminUser: admin
+adminPassword: admin123
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: standard
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server.monitoring.svc.cluster.local
+      access: proxy
+      isDefault: true
+    - name: Loki
+      type: loki
+      url: http://loki.monitoring.svc.cluster.local:3100
+      access: proxy
+    - name: Tempo
+      type: tempo
+      url: http://tempo.monitoring.svc.cluster.local:3100
+      access: proxy
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
+
+dashboards:
+  default:
+    # Linkerd dashboards
+    linkerd-top-line:
+      gnetId: 15474
+      revision: 3
+      datasource: Prometheus
+    linkerd-health:
+      gnetId: 15486
+      revision: 3
+      datasource: Prometheus
+    linkerd-kubernetes:
+      gnetId: 15479
+      revision: 2
+      datasource: Prometheus
+    
+    # Traefik dashboard
+    traefik:
+      gnetId: 17346
+      revision: 6
+      datasource: Prometheus
+    
+    # NATS dashboards
+    nats-server:
+      gnetId: 2279
+      revision: 1
+      datasource: Prometheus
+    nats-jetstream:
+      gnetId: 14725
+      revision: 1
+      datasource: Prometheus
+    
+    # Observability dashboards
+    loki-logs:
+      gnetId: 15141
+      revision: 1
+      datasource: Loki
+    tempo-tracing:
+      gnetId: 15142
+      revision: 1
+      datasource: Tempo
+    
+    # Kubernetes dashboards
+    kubernetes-cluster-monitoring:
+      gnetId: 7249
+      revision: 1
+      datasource: Prometheus
+    kubernetes-pod-monitoring:
+      gnetId: 6417
+      revision: 1
+      datasource: Prometheus
+    
+    # RaidHelper custom dashboard
+    raidhelper-overview:
+      json: |
+        {
+          "id": null,
+          "title": "RaidHelper Overview",
+          "tags": ["raidhelper"],
+          "style": "dark",
+          "timezone": "browser",
+          "panels": [
+            {
+              "id": 1,
+              "title": "API Service Health",
+              "type": "stat",
+              "targets": [
+                {
+                  "expr": "up{job=\"raidhelper-api\"}",
+                  "refId": "A"
+                }
+              ],
+              "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "id": 2,
+              "title": "Realtime Service Health", 
+              "type": "stat",
+              "targets": [
+                {
+                  "expr": "up{job=\"raidhelper-realtime\"}",
+                  "refId": "A"
+                }
+              ],
+              "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 0
+              }
+            },
+            {
+              "id": 3,
+              "title": "Web Service Health",
+              "type": "stat", 
+              "targets": [
+                {
+                  "expr": "up{job=\"raidhelper-web\"}",
+                  "refId": "A"
+                }
+              ],
+              "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 0
+              }
+            }
+          ],
+          "time": {
+            "from": "now-1h",
+            "to": "now"
+          },
+          "refresh": "5s"
+        }
+
+grafana.ini:
+  analytics:
+    check_for_updates: false
+  log:
+    mode: console
+  paths:
+    data: /var/lib/grafana/data
+    logs: /var/log/grafana
+    plugins: /var/lib/grafana/plugins
+    provisioning: /etc/grafana/provisioning
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi

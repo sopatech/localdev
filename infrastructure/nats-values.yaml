@@ -1,0 +1,23 @@
+# NATS configuration for local development
+
+# Authentication configuration
+auth:
+  enabled: false  # Disable auth for local development
+
+# JetStream configuration (for streaming)
+jetstream:
+  enabled: true
+  memStorage: 1Gi
+
+# Service configuration
+service:
+  type: ClusterIP
+
+# Resource limits
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi

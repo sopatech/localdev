@@ -1,0 +1,59 @@
+configs:
+  cm:
+    # Enable API key capability for admin account
+    accounts.admin: "apiKey, login"
+    # Set ArgoCD server URL
+    url: "http://localhost:8080"
+    # Enable insecure mode for local development
+    server.insecure: "true"
+    # Application namespaces
+    application.namespaces: "argocd,raidhelper-prod"
+    # Enable application in any namespace
+    application.instanceLabelKey: argocd.argoproj.io/instance
+  rbac:
+    policy.default: role:readonly
+    policy.csv: |
+      p, role:admin, applications, *, *, allow
+      p, role:admin, clusters, *, *, allow
+      p, role:admin, repositories, *, *, allow
+      p, role:admin, certificates, *, *, allow
+      p, role:admin, accounts, *, *, allow
+      p, role:admin, gpgkeys, *, *, allow
+      p, role:admin, logs, *, *, allow
+      p, role:admin, exec, *, *, allow
+      g, admin, role:admin
+  params:
+    # Enable insecure mode
+    server.insecure: true
+    # Application controller settings
+    application.namespaces: "argocd,raidhelper-prod"
+
+server:
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 80
+  # Ingress configuration
+  ingress:
+    enabled: false
+  # Additional CLI arguments
+  extraArgs:
+    - --insecure
+
+controller:
+  # Application controller settings
+  extraArgs:
+    - --application-namespaces=argocd,raidhelper-prod
+
+repoServer:
+  # Repository server settings
+  extraArgs:
+    - --loglevel=debug
+
+# Notifications (optional)
+notifications:
+  enabled: false
+
+# ApplicationSet controller
+applicationSet:
+  enabled: true

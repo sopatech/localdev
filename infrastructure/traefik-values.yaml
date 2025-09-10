@@ -1,0 +1,66 @@
+# CRDs are managed separately via traefik-crds chart
+
+deployment:
+  replicas: 1
+
+service:
+  type: ClusterIP
+
+ports:
+  web:
+    port: 8080
+    expose: true
+    exposedPort: 80
+  websecure:
+    port: 8443
+    expose: true
+    exposedPort: 443
+  traefik:
+    port: 9000
+    expose: true
+    exposedPort: 8081
+
+ingressRoute:
+  dashboard:
+    enabled: false
+
+providers:
+  kubernetesCRD:
+    enabled: true
+    allowCrossNamespace: true
+  kubernetesIngress:
+    enabled: true
+    allowExternalNameServices: true
+
+metrics:
+  prometheus:
+    enabled: true
+
+logs:
+  general:
+    level: INFO
+  access:
+    enabled: true
+
+# Global configuration
+globalArguments:
+  - "--global.checknewversion=false"
+  - "--global.sendanonymoususage=false"
+
+# Additional arguments
+additionalArguments:
+  - "--providers.kubernetesingress.ingressclass=traefik"
+  - "--entrypoints.web.address=:8080"
+  - "--entrypoints.websecure.address=:8443"
+  - "--entrypoints.traefik.address=:9000"
+  - "--api.dashboard=true"
+  - "--api.insecure=true"
+
+# Resource limits
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi

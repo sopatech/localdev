@@ -1,0 +1,64 @@
+# LocalStack configuration for local development
+# DynamoDB only for optimal resource usage
+
+# Service configuration
+service:
+  type: ClusterIP
+  edgeService:
+    name: edge
+    targetPort: 4566
+
+# Resource limits (minimal for DynamoDB Local)
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# Enable only DynamoDB for local development
+startServices: "dynamodb"
+
+# Environment variables for LocalStack configuration
+extraEnvVars:
+  - name: DEFAULT_REGION
+    value: "us-east-1"
+  - name: DEBUG
+    value: "1"
+  - name: PERSISTENCE
+    value: "1"
+  - name: DATA_DIR
+    value: "/tmp/localstack/data"
+
+# Enable persistence for data to survive pod restarts
+persistence:
+  enabled: true
+  size: 2Gi
+  storageClass: standard
+
+# Image configuration
+image:
+  repository: localstack/localstack
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Health checks
+livenessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
+
+readinessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
+
+# Lambda configuration (if needed later)
+lambda:
+  executor: "docker"
+  environment_timeout: 60
