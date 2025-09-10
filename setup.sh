@@ -782,22 +782,29 @@ show_next_steps() {
     log_success "🎉 Local development environment is ready!"
     echo
     echo -e "${BLUE}📋 Next Steps:${NC}"
-    echo "  1. Start port-forwards: ./scripts/port-forwards.sh"
+    echo "  1. Start port-forwards: make port-forwards"
     echo "  2. Access ArgoCD: http://localhost:8081 (admin/$admin_password)"
     echo "  3. Access Grafana: http://localhost:3000 (admin/admin123)"
-    echo "  4. Connect Telepresence: telepresence connect"
-    echo "  5. Intercept a service: telepresence intercept <service-name> --namespace raidhelper-prod --port <local-port>"
+    echo "  4. Access LocalStack: http://localhost:4566 (DynamoDB Local)"
+    echo "  5. Access NATS: http://localhost:4222 (Messaging)"
+    echo "  6. Connect Telepresence: make telepresence-connect"
+    echo
+    echo -e "${BLUE}🌐 Local Domains (if configured):${NC}"
+    echo "  - Main App: http://raidhelper.local"
+    echo "  - API: http://api.raidhelper.local"
+    echo "  - WebSocket: ws://ws.raidhelper.local"
     echo
     echo -e "${BLUE}📚 Documentation:${NC}"
+    echo "  - Local domains: docs/local-domains.md"
     echo "  - Telepresence guide: docs/telepresence.md"
     echo "  - Troubleshooting: docs/troubleshooting.md"
     echo
     echo -e "${BLUE}🔧 Common Commands:${NC}"
-    echo "  - make status    # Check cluster status"
-    echo "  - make logs      # View logs"
-    echo "  - make cleanup   # Clean up resources"
-    echo "  - ./scripts/port-forwards.sh --show-only  # Show service URLs"
-    echo "  - pkill -f 'kubectl port-forward'  # Stop all port-forwards"
+    echo "  - make port-forwards        # Start all port-forwards"
+    echo "  - make port-forwards-stop   # Stop all port-forwards"
+    echo "  - make telepresence-connect # Connect Telepresence"
+    echo "  - make telepresence-disconnect # Disconnect Telepresence"
+    echo "  - make delete               # Delete minikube cluster"
     echo
     if [ -f "argocd-config.env" ]; then
         echo -e "${BLUE}🔑 ArgoCD Configuration:${NC}"
