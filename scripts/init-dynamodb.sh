@@ -68,7 +68,7 @@ table_exists() {
 create_table() {
     log_info "Creating DynamoDB table: $TABLE_NAME"
     
-    aws dynamodb create-table \
+    AWS_PAGER="" aws dynamodb create-table \
         --table-name "$TABLE_NAME" \
         --attribute-definitions \
             AttributeName=PK,AttributeType=S \
@@ -122,7 +122,7 @@ main() {
     
     # Show table info
     log_info "Table information:"
-    aws dynamodb describe-table \
+    AWS_PAGER="" aws dynamodb describe-table \
         --table-name "$TABLE_NAME" \
         --endpoint-url "$LOCALSTACK_ENDPOINT" \
         --region "$AWS_REGION" \
