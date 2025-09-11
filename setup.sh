@@ -790,9 +790,9 @@ show_next_steps() {
     echo "  6. Connect Telepresence: make telepresence-connect"
     echo
     echo -e "${BLUE}🌐 Local Domains (if configured):${NC}"
-    echo "  - Main App: http://raidhelper.local"
-    echo "  - API: http://api.raidhelper.local"
-    echo "  - WebSocket: ws://ws.raidhelper.local"
+    echo "  - Main App: http://raidhelper.local:8086"
+    echo "  - API: http://api.raidhelper.local:8086"
+    echo "  - WebSocket: ws://ws.raidhelper.local:8086"
     echo
     echo -e "${BLUE}📚 Documentation:${NC}"
     echo "  - Local domains: docs/local-domains.md"

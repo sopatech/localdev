@@ -74,14 +74,43 @@ The infrastructure components are optimized for local development:
    ```
 
 4. **Access the services**:
-   - ArgoCD: http://localhost:8080 (admin/admin123)
-   - Prometheus: http://localhost:9090
+   - ArgoCD: http://localhost:8081 (admin/admin123)
+   - Prometheus: http://localhost:9091
    - Grafana: http://localhost:3000 (admin/admin123)
    - Tempo: http://localhost:3200
    - Loki: http://localhost:3100
-   - Traefik: http://localhost:8081
-   - LocalStack: http://localhost:4566 (DynamoDB)
-   - NATS: http://localhost:8222 (monitoring)
+   - Traefik: http://localhost:8086 (main entry point)
+   - Traefik UI: http://localhost:8085
+   - LocalStack: http://localhost:8000 (DynamoDB)
+   - NATS: nats://localhost:4222
+   - Linkerd: http://localhost:50750
+
+## 🌐 Local Domain Configuration
+
+### Setting Up Local Domains
+
+1. **Configure local domains** (optional but recommended):
+   ```bash
+   ./scripts/setup-local-domains.sh add
+   ```
+
+2. **Access services via domains** (requires port 8086):
+   - **Main App**: http://raidhelper.local:8086
+   - **API**: http://api.raidhelper.local:8086  
+   - **WebSocket**: ws://ws.raidhelper.local:8086
+
+### Important: Port Requirements
+
+**Local domains require port 8086** because:
+- All traffic routes through Traefik on port 8086
+- Traefik uses the Host header to route to the correct service
+- The `/etc/hosts` file only maps domains to IP addresses (no ports)
+
+**Alternative: Direct Port Access**
+If you prefer not to use domains, you can access services directly:
+- **API**: http://localhost:8082 (direct port forward)
+- **WebSocket**: ws://localhost:8083 (direct port forward)
+- **Web**: http://localhost:8084 (direct port forward)
 
 ## 🔧 Development Workflow
 
