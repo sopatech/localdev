@@ -122,6 +122,10 @@ LocalStack provides a local DynamoDB instance for development:
 2. **Table initialization**: The `raidhelper` table is automatically created during setup
 3. **Manual initialization** (if needed):
    ```bash
+   # Make sure port forwards are running first
+   ./scripts/port-forwards.sh
+   
+   # Then initialize DynamoDB
    ./scripts/init-dynamodb.sh
    ```
 
