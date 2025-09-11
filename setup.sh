@@ -748,6 +748,37 @@ setup_local_domains() {
     fi
 }
 
+# Function to initialize DynamoDB table
+init_dynamodb() {
+    print_header "INITIALIZING DYNAMODB TABLE"
+    
+    # Check if init script exists
+    if [ ! -f "scripts/init-dynamodb.sh" ]; then
+        log_warn "DynamoDB initialization script not found. Skipping."
+        return
+    fi
+    
+    # Check if LocalStack is running
+    if ! kubectl get pods -n storage | grep -q "localstack.*Running"; then
+        log_warn "LocalStack is not running. Skipping DynamoDB initialization."
+        log_info "You can run './scripts/init-dynamodb.sh' manually after LocalStack is ready."
+        return
+    fi
+    
+    log_info "Initializing DynamoDB table in LocalStack..."
+    
+    # Make script executable
+    chmod +x scripts/init-dynamodb.sh
+    
+    # Run the initialization script
+    if ./scripts/init-dynamodb.sh; then
+        log_success "DynamoDB table initialized successfully!"
+    else
+        log_warn "DynamoDB table initialization failed or table already exists."
+        log_info "You can run './scripts/init-dynamodb.sh' manually to retry."
+    fi
+}
+
 # Function to deploy RaidHelper applications
 deploy_applications() {
     print_header "DEPLOYING RAIDHELPER APPLICATIONS"
@@ -839,6 +870,7 @@ main() {
     gather_github_credentials
     setup_private_repositories
     setup_registry_secrets
+    init_dynamodb
     deploy_applications
     show_next_steps
     

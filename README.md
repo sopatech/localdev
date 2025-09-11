@@ -73,12 +73,7 @@ The infrastructure components are optimized for local development:
    ./scripts/port-forwards.sh
    ```
 
-4. **Initialize DynamoDB table** (optional):
-   ```bash
-   ./scripts/init-dynamodb.sh
-   ```
-
-5. **Access the services**:
+4. **Access the services**:
    - ArgoCD: http://localhost:8081 (admin/admin123)
    - Prometheus: http://localhost:9091
    - Grafana: http://localhost:3000 (admin/admin123)
@@ -124,7 +119,8 @@ If you prefer not to use domains, you can access services directly:
 LocalStack provides a local DynamoDB instance for development:
 
 1. **Access LocalStack**: http://localhost:8000
-2. **Initialize RaidHelper table**:
+2. **Table initialization**: The `raidhelper` table is automatically created during setup
+3. **Manual initialization** (if needed):
    ```bash
    ./scripts/init-dynamodb.sh
    ```
