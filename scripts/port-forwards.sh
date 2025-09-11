@@ -144,18 +144,18 @@ show_services() {
     echo
     echo -e "${BLUE}🌐 Available Services:${NC}"
     echo "  ┌─────────────────────────────────────────────────┐"
-    echo "  │ Service     │ URL                             │"
+    echo "  │ Service     │ URL                               │"
     echo "  ├─────────────────────────────────────────────────┤"
-    echo "  │ Web App     │ http://raidhelper.local:8086    │"
-    echo "  │ ArgoCD      │ http://localhost:8081           │"
-    echo "  │ Prometheus  │ http://localhost:9091           │"
-    echo "  │ Grafana     │ http://localhost:3000           │"
-    echo "  │ Tempo       │ http://localhost:3200           │"
-    echo "  │ Loki        │ http://localhost:3100           │"
-    echo "  │ NATS        │ nats://localhost:4222          │"
-    echo "  │ LocalStack  │ http://localhost:8000           │"
-    echo "  │ Traefik UI  │ http://localhost:8085           │"
-    echo "  │ Linkerd     │ http://localhost:50750          │"
+    echo "  │ Web App     │ http://raidhelper.local:8086      │"
+    echo "  │ ArgoCD      │ http://localhost:8081             │"
+    echo "  │ Prometheus  │ http://localhost:9091             │"
+    echo "  │ Grafana     │ http://localhost:3000             │"
+    echo "  │ Tempo       │ http://localhost:3200             │"
+    echo "  │ Loki        │ http://localhost:3100             │"
+    echo "  │ NATS        │ nats://localhost:4222             │"
+    echo "  │ LocalStack  │ http://localhost:8000             │"
+    echo "  │ Traefik UI  │ http://localhost:8085             │"
+    echo "  │ Linkerd     │ http://localhost:50750            │"
     echo "  └─────────────────────────────────────────────────┘"
     echo
     echo -e "${BLUE}🔑 Default Credentials:${NC}"
@@ -201,14 +201,6 @@ main() {
     start_port_forward "localstack" "storage" "8000" "4566"
     
     start_port_forward "web" "linkerd-viz" "50750" "8084"
-    
-    # Optional: RaidHelper services (if deployed)
-    if kubectl get namespace raidhelper-prod >/dev/null 2>&1; then
-        log_info "RaidHelper namespace found, adding service port forwards..."
-        start_port_forward "raidhelper-api-service" "raidhelper-prod" "8082" "8080"
-        start_port_forward "raidhelper-realtime-service" "raidhelper-prod" "8083" "8080"
-        start_port_forward "raidhelper-web-service" "raidhelper-prod" "8084" "80"
-    fi
     
     echo
     log_success "Port forwards started successfully!"

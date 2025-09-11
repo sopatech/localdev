@@ -1,66 +1,10 @@
-# Local development environment gitignore
+# Local development environment files
+config/tunnel.env
+config/local-domains.env
+
+# Cloudflare tunnel configuration
+~/.cloudflared/
 
 # Temporary files
-*.tmp
-*.temp
-.DS_Store
-Thumbs.db
-
-# Logs
 *.log
-logs/
-
-# Environment files with secrets
-.env
-.env.local
-.env.*.local
-*secret*
-*password*
-*token*
-
-# ArgoCD local configuration with sensitive data
-argocd-config.env
-
-# Kubernetes secrets and configs
-kubeconfig
-*.kubeconfig
-
-# ArgoCD CLI cache
-.argocd/
-
-# Telepresence cache
-.telepresence/
-
-# Helm cache
-.helm/
-
-# Minikube data (if stored locally)
-.minikube/
-
-# Docker volumes
-docker-volumes/
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Backup files
-*.bak
-*.backup
-*.old
-
-# Local overrides
-local-overrides.yaml
-local-values.yaml
+*.pid
