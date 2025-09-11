@@ -39,7 +39,9 @@ wait_for_localstack() {
     local attempt=1
     
     while [ $attempt -le $max_attempts ]; do
-        if curl -s "$LOCALSTACK_ENDPOINT/health" | grep -q "dynamodb"; then
+        # Test DynamoDB directly by trying to list tables
+        if AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=us-east-1 \
+           aws dynamodb list-tables --endpoint-url "$LOCALSTACK_ENDPOINT" >/dev/null 2>&1; then
             log_success "LocalStack DynamoDB service is ready!"
             return 0
         fi
