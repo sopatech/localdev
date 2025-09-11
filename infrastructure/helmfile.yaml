@@ -23,7 +23,6 @@ helmDefaults:
   force: false
   # Reduce verbosity
   args:
-    - --quiet
     - --suppress-diff
 
 releases:
