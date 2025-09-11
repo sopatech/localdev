@@ -205,8 +205,8 @@ main() {
     # Optional: RaidHelper services (if deployed)
     if kubectl get namespace raidhelper-prod >/dev/null 2>&1; then
         log_info "RaidHelper namespace found, adding service port forwards..."
-        start_port_forward "raidhelper-api-service" "raidhelper-prod" "8082" "8081"
-        start_port_forward "raidhelper-realtime-service" "raidhelper-prod" "8083" "8082"
+        start_port_forward "raidhelper-api-service" "raidhelper-prod" "8082" "8080"
+        start_port_forward "raidhelper-realtime-service" "raidhelper-prod" "8083" "8080"
         start_port_forward "raidhelper-web-service" "raidhelper-prod" "8084" "80"
     fi
     

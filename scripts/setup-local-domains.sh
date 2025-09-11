@@ -28,12 +28,12 @@ log_error() {
 
 # Configuration
 LOCAL_DOMAIN="${LOCAL_DOMAIN:-local}"
-PROJECT_NAME="${PROJECT_NAME:-myproject}"
+PROJECT_NAME="${PROJECT_NAME:-raidhelper}"
 SERVICES="${SERVICES:-}"
 
 # Default services if none provided
 if [ -z "$SERVICES" ]; then
-    SERVICES="web:80,api:8081,ws:8082"
+    SERVICES="web:8086,api:8086,ws:8086"
 fi
 
 # Parse services
@@ -90,11 +90,11 @@ show_usage() {
     echo ""
     echo "Environment Variables:"
     echo "  LOCAL_DOMAIN    Local domain suffix (default: local)"
-    echo "  PROJECT_NAME    Project name (default: myproject)"
-    echo "  SERVICES        Comma-separated list of services (default: web:80,api:8081,ws:8082)"
+    echo "  PROJECT_NAME    Project name (default: raidhelper)"
+    echo "  SERVICES        Comma-separated list of services (default: web:8086,api:8086,ws:8086)"
     echo ""
     echo "Examples:"
-    echo "  # Basic usage"
+    echo "  # Basic usage (RaidHelper defaults)"
     echo "  $0 add"
     echo ""
     echo "  # Custom project"
