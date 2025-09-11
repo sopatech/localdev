@@ -768,37 +768,32 @@ init_dynamodb() {
     # Check if port forward is running for LocalStack
     if ! lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1; then
         log_warn "LocalStack port forward (port 8000) is not running."
-        log_info "Starting port forwards for DynamoDB initialization..."
+        log_info "Starting port-forward for LocalStack..."
         
-        # Start port forwards in background
-        if [ -f "scripts/port-forwards.sh" ]; then
-            ./scripts/port-forwards.sh &
-            local port_forward_pid=$!
-            
-            # Wait for port forward to be ready
-            log_info "Waiting for port forward to be ready..."
-            local max_attempts=30
-            local attempt=1
-            
-            while [ $attempt -le $max_attempts ]; do
-                if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1; then
-                    log_success "Port forward is ready!"
-                    break
-                fi
-                
-                log_info "Attempt $attempt/$max_attempts: Waiting for port forward..."
-                sleep 2
-                ((attempt++))
-            done
-            
-            if [ $attempt -gt $max_attempts ]; then
-                log_error "Port forward failed to start. Skipping DynamoDB initialization."
-                kill $port_forward_pid 2>/dev/null || true
-                return
+        # Start targeted port-forward for LocalStack only
+        pkill -f "kubectl port-forward.*localstack" || true
+        kubectl port-forward svc/localstack -n storage 8000:4566 >/dev/null 2>&1 &
+        local port_forward_pid=$!
+        
+        # Wait for port forward to be ready
+        log_info "Waiting for port forward to be ready..."
+        local max_attempts=30
+        local attempt=1
+        
+        while [ $attempt -le $max_attempts ]; do
+            if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+                log_success "Port forward is ready!"
+                break
             fi
-        else
-            log_warn "Port forwards script not found. Skipping DynamoDB initialization."
-            log_info "Please run './scripts/port-forwards.sh' manually and then retry."
+            
+            log_info "Attempt $attempt/$max_attempts: Waiting for port forward..."
+            sleep 2
+            ((attempt++))
+        done
+        
+        if [ $attempt -gt $max_attempts ]; then
+            log_error "Port forward failed to start. Skipping DynamoDB initialization."
+            kill $port_forward_pid 2>/dev/null || true
             return
         fi
     fi
