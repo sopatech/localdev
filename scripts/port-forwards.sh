@@ -146,6 +146,7 @@ show_services() {
     echo "  ┌─────────────────────────────────────────────────┐"
     echo "  │ Service     │ URL                             │"
     echo "  ├─────────────────────────────────────────────────┤"
+    echo "  │ Web App     │ http://raidhelper.local:8086    │"
     echo "  │ ArgoCD      │ http://localhost:8081           │"
     echo "  │ Prometheus  │ http://localhost:9091           │"
     echo "  │ Grafana     │ http://localhost:3000           │"
@@ -153,7 +154,6 @@ show_services() {
     echo "  │ Loki        │ http://localhost:3100           │"
     echo "  │ NATS        │ nats://localhost:4222          │"
     echo "  │ LocalStack  │ http://localhost:8000           │"
-    echo "  │ Traefik     │ http://localhost:8086           │"
     echo "  │ Traefik UI  │ http://localhost:8085           │"
     echo "  │ Linkerd     │ http://localhost:50750          │"
     echo "  └─────────────────────────────────────────────────┘"
@@ -181,6 +181,11 @@ main() {
     # Start port forwards
     log_info "Starting port forwards..."
     
+    # Traefik (main entry point for local domains) - FIRST
+    start_port_forward "traefik" "traefik" "8086" "80"
+    # Traefik dashboard
+    start_port_forward "traefik" "traefik" "8085" "8081"
+    
     # Core infrastructure services
     start_port_forward "argo-argocd-server" "argocd" "8081" "80"
     start_port_forward "prometheus-server" "monitoring" "9091" "80"
@@ -194,11 +199,6 @@ main() {
     
     # LocalStack (DynamoDB emulation)
     start_port_forward "localstack" "storage" "8000" "4566"
-    
-    # Traefik (main entry point for local domains)
-    start_port_forward "traefik" "traefik" "8086" "80"
-    # Traefik dashboard
-    start_port_forward "traefik" "traefik" "8085" "8081"
     
     start_port_forward "web" "linkerd-viz" "50750" "8084"
     

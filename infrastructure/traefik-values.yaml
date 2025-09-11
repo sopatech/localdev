@@ -45,6 +45,15 @@ logs:
   access:
     enabled: true
 
+# Enable OpenTelemetry tracing
+tracing:
+  otlp:
+    grpc:
+      endpoint: "tempo.monitoring.svc.cluster.local:4317"
+      insecure: true
+  serviceName: "traefik"
+  sampleRate: 1.0
+
 # Global configuration
 globalArguments:
   - "--global.checknewversion=false"
@@ -58,6 +67,9 @@ additionalArguments:
   - "--entrypoints.traefik.address=:9000"
   - "--api.dashboard=true"
   - "--api.insecure=true"
+  # OTLP tracing configuration
+  - "--tracing.otlp.grpc.endpoint=tempo.monitoring.svc.cluster.local:4317"
+  - "--tracing.otlp.grpc.insecure=true"
 
 # Resource limits
 resources:

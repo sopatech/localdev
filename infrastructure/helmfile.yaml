@@ -114,6 +114,17 @@ releases:
     values:
       - loki-values-simple.yaml
 
+  # Promtail (log collection agent)
+  - name: promtail
+    namespace: monitoring
+    chart: grafana/promtail
+    version: 6.17.0
+    createNamespace: true
+    values:
+      - promtail-values.yaml
+    needs:
+      - loki
+
   # ArgoCD (GitOps)
   - name: argo
     namespace: argocd

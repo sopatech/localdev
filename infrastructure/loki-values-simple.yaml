@@ -9,11 +9,7 @@ rbac:
 podSecurityPolicy:
   enabled: false
 
-# Disable PodSecurityPolicy for Promtail as well
-promtail:
-  enabled: false
-  podSecurityPolicy:
-    enabled: false
+# Promtail is now deployed as a separate chart
 
 # Basic Loki configuration
 loki:
