@@ -115,7 +115,8 @@ main() {
     aws dynamodb wait table-exists \
         --table-name "$TABLE_NAME" \
         --endpoint-url "$LOCALSTACK_ENDPOINT" \
-        --region "$AWS_REGION"
+        --region "$AWS_REGION" \
+        >/dev/null 2>&1
     
     log_success "DynamoDB table '$TABLE_NAME' is ready for use!"
     
