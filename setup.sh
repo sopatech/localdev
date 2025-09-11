@@ -482,19 +482,40 @@ deploy_infrastructure() {
 install_helm_plugins() {
     print_header "INSTALLING HELM PLUGINS"
     
+    # Check if helm is available
+    if ! command_exists helm; then
+        log_error "Helm is not installed. Cannot install plugins."
+        return 1
+    fi
+    
     log_info "Installing helm diff plugin..."
     
     # Check if helm diff plugin is already installed
-    if helm plugin list | grep -q "diff"; then
+    if helm plugin list 2>/dev/null | grep -q "diff"; then
         log_info "helm diff plugin is already installed"
     else
         log_info "Installing helm diff plugin..."
-        if helm plugin install https://github.com/databus23/helm-diff; then
+        
+        # Try to install the plugin with better error handling
+        local install_output
+        if install_output=$(helm plugin install https://github.com/databus23/helm-diff 2>&1); then
             log_success "helm diff plugin installed successfully!"
         else
-            log_warn "Failed to install helm diff plugin. You can install it manually with:"
+            log_error "Failed to install helm diff plugin:"
+            echo "$install_output"
+            log_warn "You can install it manually with:"
             echo "  helm plugin install https://github.com/databus23/helm-diff"
+            return 1
         fi
+    fi
+    
+    # Verify the plugin is working
+    log_info "Verifying helm diff plugin..."
+    if helm diff version >/dev/null 2>&1; then
+        log_success "helm diff plugin is working correctly!"
+    else
+        log_warn "helm diff plugin installed but may not be working correctly"
+        log_info "Try running: helm diff version"
     fi
     
     log_success "Helm plugins installation complete!"
@@ -919,8 +940,8 @@ main() {
     # Run setup steps
     check_requirements
     configure_minikube
-    deploy_infrastructure
     install_helm_plugins
+    deploy_infrastructure
     setup_local_domains
     get_argocd_password
     gather_github_credentials
