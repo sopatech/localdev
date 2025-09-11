@@ -73,7 +73,12 @@ The infrastructure components are optimized for local development:
    ./scripts/port-forwards.sh
    ```
 
-4. **Access the services**:
+4. **Initialize DynamoDB table** (optional):
+   ```bash
+   ./scripts/init-dynamodb.sh
+   ```
+
+5. **Access the services**:
    - ArgoCD: http://localhost:8081 (admin/admin123)
    - Prometheus: http://localhost:9091
    - Grafana: http://localhost:3000 (admin/admin123)
@@ -111,6 +116,35 @@ If you prefer not to use domains, you can access services directly:
 - **API**: http://localhost:8082 (direct port forward)
 - **WebSocket**: ws://localhost:8083 (direct port forward)
 - **Web**: http://localhost:8084 (direct port forward)
+
+## 🗄️ DynamoDB Setup
+
+### LocalStack DynamoDB
+
+LocalStack provides a local DynamoDB instance for development:
+
+1. **Access LocalStack**: http://localhost:8000
+2. **Initialize RaidHelper table**:
+   ```bash
+   ./scripts/init-dynamodb.sh
+   ```
+
+### Table Structure
+
+The script creates a `raidhelper` table with:
+- **Primary Key**: PK (Hash) + SK (Range)
+- **Local Secondary Indexes**: LSI1-LSI5
+- **Capacity**: 10 read/write units each
+
+### AWS CLI Configuration
+
+For LocalStack, use these settings:
+```bash
+export AWS_ENDPOINT_URL=http://localhost:8000
+export AWS_DEFAULT_REGION=us-east-1
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+```
 
 ## 🔧 Development Workflow
 

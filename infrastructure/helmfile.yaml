@@ -140,3 +140,9 @@ releases:
     createNamespace: true
     values:
       - localstack-values.yaml
+
+  # DynamoDB Table Initialization Job
+  - name: dynamodb-init
+    namespace: storage
+    chart: ../dynamodb-init-job.yaml
+    version: 0.1.0
