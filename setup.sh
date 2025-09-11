@@ -478,6 +478,28 @@ deploy_infrastructure() {
     log_success "Infrastructure deployed successfully!"
 }
 
+# Function to install helm plugins
+install_helm_plugins() {
+    print_header "INSTALLING HELM PLUGINS"
+    
+    log_info "Installing helm diff plugin..."
+    
+    # Check if helm diff plugin is already installed
+    if helm plugin list | grep -q "diff"; then
+        log_info "helm diff plugin is already installed"
+    else
+        log_info "Installing helm diff plugin..."
+        if helm plugin install https://github.com/databus23/helm-diff; then
+            log_success "helm diff plugin installed successfully!"
+        else
+            log_warn "Failed to install helm diff plugin. You can install it manually with:"
+            echo "  helm plugin install https://github.com/databus23/helm-diff"
+        fi
+    fi
+    
+    log_success "Helm plugins installation complete!"
+}
+
 # Function to gather GitHub credentials
 gather_github_credentials() {
     print_header "GITHUB CREDENTIALS SETUP"
@@ -898,6 +920,7 @@ main() {
     check_requirements
     configure_minikube
     deploy_infrastructure
+    install_helm_plugins
     setup_local_domains
     get_argocd_password
     gather_github_credentials
