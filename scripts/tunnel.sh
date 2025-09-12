@@ -3,12 +3,12 @@
 # Cloudflare Tunnel Management Script for RaidHelper Development
 # 
 # This script manages ephemeral Cloudflare tunnels for local development.
-# The tunnel connects to Traefik on port 8086, which then routes traffic
-# to the appropriate services based on ingress routes.
+# The tunnel connects to Traefik on port 8080 (web), which then routes traffic
+# to the appropriate services. Cloudflare handles TLS termination at their edge.
 #
 # Port Configuration:
-# - Tunnel connects to: localhost:8086 (Traefik main entry point)
-# - Traefik dashboard: localhost:8085
+# - Tunnel connects to: localhost:8080 (Traefik web entry point)
+# - Traefik dashboard: localhost:8081
 # - API service: localhost:8082
 # - WebSocket service: localhost:8083
 # - Web service: localhost:8084
@@ -83,13 +83,14 @@ check_prerequisites() {
 
 # Function to start ephemeral tunnel
 start_tunnel() {
-    log_info "Starting ephemeral Cloudflare tunnel (connecting to Traefik web app on port 8086)..."
+    log_info "Starting ephemeral Cloudflare tunnel (connecting to Traefik web endpoint on port 8080)..."
     
     # Clear previous log
     > "$LOG_FILE"
     
-    # Start tunnel in background (connect to Traefik web app endpoint on port 8086)
-    cloudflared tunnel --url http://localhost:8086 > "$LOG_FILE" 2>&1 &
+    # Start tunnel in background (connect to Traefik web endpoint on port 8080)
+    # Cloudflare handles TLS termination at their edge - no need for cluster TLS
+    cloudflared tunnel --url http://localhost:8080 > "$LOG_FILE" 2>&1 &
     TUNNEL_PID=$!
     
     # Wait for tunnel to start and get URL
@@ -178,6 +179,52 @@ EOF
     log_success "Tunnel environment file created: $TUNNEL_ENV_FILE"
 }
 
+# Function to create self-signed certificate for tunnel
+create_tunnel_certificate() {
+    # Get tunnel hostname from environment file if not set
+    if [ -z "${TUNNEL_HOSTNAME:-}" ] && [ -f "$TUNNEL_ENV_FILE" ]; then
+        TUNNEL_HOSTNAME=$(grep "^TUNNEL_URL=" "$TUNNEL_ENV_FILE" | cut -d'=' -f2)
+    fi
+    
+    if [ -z "${TUNNEL_HOSTNAME:-}" ]; then
+        log_error "TUNNEL_HOSTNAME not set and cannot read from tunnel.env file"
+        return 1
+    fi
+    
+    log_info "Creating self-signed certificate for tunnel host: $TUNNEL_HOSTNAME"
+    
+    # Generate self-signed certificate using openssl
+    local cert_dir="/tmp/tunnel-certs"
+    mkdir -p "$cert_dir"
+    
+    # Generate private key and certificate
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout "$cert_dir/tls.key" \
+        -out "$cert_dir/tls.crt" \
+        -subj "/CN=$TUNNEL_HOSTNAME" \
+        -addext "subjectAltName=DNS:$TUNNEL_HOSTNAME,DNS:*.trycloudflare.com" 2>/dev/null
+    
+    # Create Kubernetes secret with the certificate
+    kubectl create secret tls tunnel-tls \
+        --cert="$cert_dir/tls.crt" \
+        --key="$cert_dir/tls.key" \
+        -n "$NAMESPACE" \
+        --dry-run=client -o yaml | kubectl apply -f -
+    
+    # Save certificate for manual browser trust (optional)
+    local cert_save_dir="$HOME/.local/share/raidhelper-certs"
+    mkdir -p "$cert_save_dir"
+    cp "$cert_dir/tls.crt" "$cert_save_dir/tunnel-$(date +%s).crt"
+    
+    # Clean up temporary files
+    rm -rf "$cert_dir"
+    
+    log_success "Self-signed certificate created for $TUNNEL_HOSTNAME"
+    log_info "Certificate saved to: $cert_save_dir/ for manual browser trust"
+    log_warning "Browser will show security warnings - this is normal for self-signed certificates"
+    log_info "To trust manually: Import $cert_save_dir/tunnel-*.crt into your browser's certificate store"
+}
+
 # Function to create tunnel ingress route
 create_tunnel_ingress() {
     # Get tunnel hostname from environment file if not set
@@ -192,7 +239,7 @@ create_tunnel_ingress() {
     
     log_info "Creating tunnel ingress route for host: $TUNNEL_HOSTNAME"
     
-    # Create a new ingress route for the tunnel URL
+    # Create a new ingress route for the tunnel URL (HTTP - Cloudflare handles TLS)
     cat <<EOF | kubectl apply -f -
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
@@ -213,7 +260,7 @@ spec:
       port: 80
 EOF
     
-    log_success "Tunnel ingress route created for $TUNNEL_HOSTNAME"
+    log_success "Tunnel ingress route created for $TUNNEL_HOSTNAME (HTTP - Cloudflare handles TLS)"
 }
 
 # Function to apply tunnel configuration to Kubernetes
@@ -227,6 +274,8 @@ apply_tunnel_config() {
         return 1
     fi
     log_success "ConfigMap '$CONFIGMAP_NAME' created/updated"
+    
+    # No certificate needed - Cloudflare handles TLS termination
     
     # Create tunnel ingress route
     if ! create_tunnel_ingress; then

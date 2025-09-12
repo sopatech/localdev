@@ -897,9 +897,9 @@ show_next_steps() {
     echo "  6. Connect Telepresence: make telepresence-connect"
     echo
     echo -e "${BLUE}🌐 Local Domains (if configured):${NC}"
-    echo "  - Main App: http://raidhelper.local:8086"
-    echo "  - API: http://api.raidhelper.local:8086"
-    echo "  - WebSocket: ws://ws.raidhelper.local:8086"
+    echo "  - Main App: https://raidhelper.local:8443"
+    echo "  - API: https://api.raidhelper.local:8443"
+    echo "  - WebSocket: wss://ws.raidhelper.local:8443"
     echo
     echo -e "${BLUE}📚 Documentation:${NC}"
     echo "  - Local domains: docs/local-domains.md"
@@ -911,6 +911,8 @@ show_next_steps() {
     echo "  - make port-forwards-stop   # Stop all port-forwards"
     echo "  - make telepresence-connect # Connect Telepresence"
     echo "  - make telepresence-disconnect # Disconnect Telepresence"
+    echo "  - make tunnel               # Start ephemeral tunnel"
+    echo "  - make tunnel-stop          # Stop ephemeral tunnel"
     echo "  - make delete               # Delete minikube cluster"
     echo
     if [ -f "argocd-config.env" ]; then
@@ -949,9 +951,46 @@ main() {
     setup_registry_secrets
     init_dynamodb
     deploy_applications
+    setup_local_certificate
     show_next_steps
     
     log_success "Setup completed successfully! 🎉"
+}
+
+# Function to setup local certificate
+setup_local_certificate() {
+    print_header "Setting up Local HTTPS Certificate"
+    
+    log_info "Creating local HTTPS certificate for raidhelper.local..."
+    
+    # Check if certificate script exists
+    local cert_script="$(dirname "$0")/scripts/create-local-cert.sh"
+    if [ ! -f "$cert_script" ]; then
+        log_error "Certificate script not found: $cert_script"
+        return 1
+    fi
+    
+    # Make script executable
+    chmod +x "$cert_script"
+    
+    # Ask user if they want to create the certificate
+    echo
+    read -p "Create local HTTPS certificate for raidhelper.local? [Y/n]: " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        log_info "Skipping local certificate creation."
+        log_warn "You can create it later with: $cert_script create"
+        return 0
+    fi
+    
+    # Create the certificate
+    if "$cert_script" create; then
+        log_success "Local HTTPS certificate setup complete!"
+        log_info "You can now access your application at: https://raidhelper.local"
+    else
+        log_error "Failed to create local certificate"
+        log_warn "You can try again later with: $cert_script create"
+    fi
 }
 
 # Handle script interruption

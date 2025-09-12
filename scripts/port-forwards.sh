@@ -146,7 +146,8 @@ show_services() {
     echo "  ┌─────────────────────────────────────────────────┐"
     echo "  │ Service     │ URL                               │"
     echo "  ├─────────────────────────────────────────────────┤"
-    echo "  │ Web App     │ http://raidhelper.local:8086      │"
+    echo "  │ Web App     │ http://raidhelper.local:8080      │"
+    echo "  │ Web App     │ https://raidhelper.local:8443     │"
     echo "  │ ArgoCD      │ http://localhost:8081             │"
     echo "  │ Prometheus  │ http://localhost:9091             │"
     echo "  │ Grafana     │ http://localhost:3000             │"
@@ -154,7 +155,7 @@ show_services() {
     echo "  │ Loki        │ http://localhost:3100             │"
     echo "  │ NATS        │ nats://localhost:4222             │"
     echo "  │ LocalStack  │ http://localhost:8000             │"
-    echo "  │ Traefik UI  │ http://localhost:8085             │"
+    echo "  │ Traefik UI  │ http://localhost:8082             │"
     echo "  │ Linkerd     │ http://localhost:50750            │"
     echo "  └─────────────────────────────────────────────────┘"
     echo
@@ -182,9 +183,10 @@ main() {
     log_info "Starting port forwards..."
     
     # Traefik (main entry point for local domains) - FIRST
-    start_port_forward "traefik" "traefik" "8086" "80"
+    start_port_forward "traefik" "traefik" "8080" "80"   # HTTP
+    start_port_forward "traefik" "traefik" "8443" "443"  # HTTPS
     # Traefik dashboard
-    start_port_forward "traefik" "traefik" "8085" "8081"
+    start_port_forward "traefik" "traefik" "8082" "8081"
     
     # Core infrastructure services
     start_port_forward "argo-argocd-server" "argocd" "8081" "80"

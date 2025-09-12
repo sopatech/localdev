@@ -67,6 +67,8 @@ additionalArguments:
   - "--entrypoints.traefik.address=:9000"
   - "--api.dashboard=true"
   - "--api.insecure=true"
+  # TLS configuration for self-signed certificates
+  - "--providers.kubernetescrd.allowcrossnamespace=true"
   # OTLP tracing configuration
   - "--tracing.otlp.grpc.endpoint=tempo.monitoring.svc.cluster.local:4317"
   - "--tracing.otlp.grpc.insecure=true"
