@@ -7,4 +7,5 @@ config/local-domains.env
 
 # Temporary files
 *.log
-*.pidargocd-config.env
+*.pid
+argocd-config.env
