@@ -7,4 +7,4 @@ config/local-domains.env
 
 # Temporary files
 *.log
-*.pid
+*.pidargocd-config.env
