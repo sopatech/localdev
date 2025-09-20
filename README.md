@@ -1,6 +1,6 @@
 # Local Development Environment
 
-This repository contains the complete local development environment setup for the RaidHelper microservices using minikube, ArgoCD, Telepresence 2, and other modern Kubernetes tools.
+This repository contains the complete local development environment setup for the RaidHelper microservices using minikube, ArgoCD, mirrord, and other modern Kubernetes tools.
 
 ## 🏗️ Architecture
 
@@ -15,7 +15,7 @@ The local development environment includes:
 - **Loki**: Log aggregation
 - **LocalStack**: Local DynamoDB for data storage
 - **NATS**: Messaging system
-- **Telepresence 2**: Local development with cluster integration
+- **mirrord**: Local development with seamless cloud access
 - **cert-manager**: Certificate management
 
 ## 🚀 Quick Start
@@ -28,7 +28,7 @@ The local development environment includes:
 - helmfile
 - helm
 - argocd CLI
-- telepresence
+- mirrord
 - go
 - curl
 
@@ -148,24 +148,42 @@ export AWS_SECRET_ACCESS_KEY=test
 
 ## 🔧 Development Workflow
 
-### Using Telepresence for Local Development
+### Using mirrord for Local Development
 
-1. **Connect Telepresence**:
+**🎉 No authentication required!** mirrord works seamlessly without cloud accounts or API keys.
+
+#### Quick Start with mirrord
+
+1. **Run your service locally with cloud access**:
    ```bash
-   telepresence connect
+   # Basic usage - mirrord will auto-detect the target
+   mirrord exec go run ./cmd/api
+   
+   # Specify target explicitly
+   mirrord exec --target raidhelper-api --namespace apps go run ./cmd/api
    ```
 
-2. **Intercept any service**:
+2. **Available targets**:
    ```bash
-   telepresence intercept <service-name> --namespace raidhelper-local --port <local-port>
-   # Example: telepresence intercept raidhelper-api --namespace raidhelper-local --port 8081
+   make mirrord-status  # Show available services
    ```
 
-3. **Start your local service**:
+3. **Advanced usage**:
    ```bash
-   # In your service directory
-   go run ./cmd/api
+   # Run with specific environment variables
+   mirrord exec --target raidhelper-api --namespace apps --env-file .env go run ./cmd/api
+   
+   # Run with file access to cloud storage
+   mirrord exec --target raidhelper-api --namespace apps --fs go run ./cmd/api
    ```
+
+#### Benefits of mirrord
+
+- ✅ **No setup required** - Works out of the box
+- ✅ **Faster debugging** - Use your favorite IDE tools
+- ✅ **Real cloud data** - Access actual databases, queues, and services
+- ✅ **Safe testing** - No risk of breaking shared environments
+- ✅ **Cost effective** - No need for personal dev environments
 
 ### Testing RaidHelper Services
 
@@ -232,12 +250,12 @@ localdev/
 │   ├── nats-surveyor-values.yaml # NATS Surveyor values
 │   ├── tempo-values.yaml      # Tempo values
 │   ├── loki-values-simple.yaml # Loki values
-│   └── telepresence-values.yaml # Telepresence values
+│   └── (mirrord requires no configuration files)
 ├── scripts/                    # Helper scripts
 │   └── port-forwards.sh       # Port-forward script
 └── docs/                       # Documentation
     ├── README.md              # This file
-    ├── telepresence.md        # Telepresence guide
+    ├── mirrord.md            # mirrord guide
     └── troubleshooting.md     # Troubleshooting guide
 ```
 
@@ -330,10 +348,16 @@ aws dynamodb put-item \
 
 ### Common Issues
 
-1. **Telepresence connection fails**:
+1. **mirrord connection issues**:
    ```bash
-   telepresence quit
-   telepresence connect
+   # Check available targets
+   make mirrord-status
+   
+   # Verify cluster connectivity
+   kubectl get pods -n apps
+   
+   # Try with explicit target
+   mirrord exec --target raidhelper-api --namespace apps go run ./cmd/api
    ```
 
 2. **ArgoCD sync issues**:
@@ -415,8 +439,8 @@ make sync-apps-local
 # Stop port-forwards
 pkill -f "kubectl port-forward"
 
-# Disconnect Telepresence
-telepresence quit
+# Stop mirrord (no disconnect needed - just stop your local process)
+# mirrord automatically stops when your local process exits
 
 # Stop minikube
 minikube stop
@@ -434,7 +458,7 @@ docker system prune -a
 
 ## 📚 Additional Resources
 
-- [Telepresence Documentation](https://www.telepresence.io/docs/)
+- [mirrord Documentation](https://metalbear.com/mirrord/)
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
 - [Linkerd Documentation](https://linkerd.io/docs/)
 - [Traefik Documentation](https://doc.traefik.io/traefik/)

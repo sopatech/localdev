@@ -192,7 +192,7 @@ main() {
     start_port_forward "argo-argocd-server" "argocd" "8081" "80"
     start_port_forward "prometheus-server" "monitoring" "9091" "80"
     start_port_forward "grafana" "monitoring" "3000" "80"
-    start_port_forward "tempo" "monitoring" "3200" "3100"
+    start_port_forward "tempo" "monitoring" "3200" "3200"
     
     start_port_forward "loki" "monitoring" "3100" "3100"
     

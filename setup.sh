@@ -89,13 +89,6 @@ get_install_command() {
                 echo "curl -sSL https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 -o argocd && sudo install argocd /usr/local/bin/"
             fi
             ;;
-        telepresence)
-            if [[ "$os_type" == "Darwin" ]]; then
-                echo "brew install datawire/blackbird/telepresence"
-            elif [[ "$os_type" == "Linux" ]]; then
-                echo "sudo curl -fL https://app.getambassador.io/download/tel2oss/releases/download/v2.18.0/telepresence-linux-amd64 -o /usr/local/bin/telepresence && sudo chmod +x /usr/local/bin/telepresence"
-            fi
-            ;;
         linkerd)
             if [[ "$os_type" == "Darwin" ]]; then
                 echo "brew install linkerd"
@@ -108,6 +101,20 @@ get_install_command() {
                 echo "brew install go"
             elif [[ "$os_type" == "Linux" ]]; then
                 echo "Visit https://golang.org/dl/ to download and install Go"
+            fi
+            ;;
+        cloudflared)
+            if [[ "$os_type" == "Darwin" ]]; then
+                echo "brew install cloudflared"
+            elif [[ "$os_type" == "Linux" ]]; then
+                echo "curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared && sudo install cloudflared /usr/local/bin/"
+            fi
+            ;;
+        mirrord)
+            if [[ "$os_type" == "Darwin" ]]; then
+                echo "brew install metalbear-co/mirrord/mirrord"
+            elif [[ "$os_type" == "Linux" ]]; then
+                echo "curl -fsSL https://raw.githubusercontent.com/metalbear-co/mirrord/main/scripts/install.sh | bash"
             fi
             ;;
         *)
@@ -202,19 +209,6 @@ install_tool() {
                 rm -f argocd
             fi
             ;;
-        telepresence)
-            if [[ "$os_type" == "Darwin" ]]; then
-                if command_exists brew; then
-                    brew install datawire/blackbird/telepresence
-                else
-                    log_error "Homebrew is required to install telepresence on macOS"
-                    return 1
-                fi
-            elif [[ "$os_type" == "Linux" ]]; then
-                sudo curl -fL https://app.getambassador.io/download/tel2oss/releases/download/v2.18.0/telepresence-linux-amd64 -o /usr/local/bin/telepresence
-                sudo chmod +x /usr/local/bin/telepresence
-            fi
-            ;;
         linkerd)
             if [[ "$os_type" == "Darwin" ]]; then
                 if command_exists brew; then
@@ -246,6 +240,32 @@ install_tool() {
                 return 1
             fi
             ;;
+        cloudflared)
+            if [[ "$os_type" == "Darwin" ]]; then
+                if command_exists brew; then
+                    brew install cloudflared
+                else
+                    log_error "Homebrew is required to install cloudflared on macOS"
+                    return 1
+                fi
+            elif [[ "$os_type" == "Linux" ]]; then
+                curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+                sudo install cloudflared /usr/local/bin/
+                rm -f cloudflared
+            fi
+            ;;
+        mirrord)
+            if [[ "$os_type" == "Darwin" ]]; then
+                if command_exists brew; then
+                    brew install metalbear-co/mirrord/mirrord
+                else
+                    log_error "Homebrew is required to install mirrord on macOS"
+                    return 1
+                fi
+            elif [[ "$os_type" == "Linux" ]]; then
+                curl -fsSL https://raw.githubusercontent.com/metalbear-co/mirrord/main/scripts/install.sh | bash
+            fi
+            ;;
         *)
             log_error "Unknown tool: $tool"
             return 1
@@ -267,7 +287,7 @@ check_requirements() {
     print_header "CHECKING REQUIREMENTS"
     
     local missing_tools=()
-    local tools=("docker" "minikube" "kubectl" "helm" "helmfile" "argocd" "telepresence" "linkerd" "go" "curl")
+    local tools=("docker" "minikube" "kubectl" "helm" "helmfile" "argocd" "mirrord" "linkerd" "go" "curl" "cloudflared")
     
     for tool in "${tools[@]}"; do
         if command_exists "$tool"; then
@@ -408,7 +428,7 @@ deploy_infrastructure() {
     cd infrastructure
     
     log_info "Deploying full infrastructure stack with Helmfile..."
-    log_info "This includes: ArgoCD, Traefik, Linkerd, Prometheus, Grafana, Tempo, Loki, Telepresence"
+    log_info "This includes: ArgoCD, Traefik, Linkerd, Prometheus, Grafana, Tempo, Loki, mirrord"
     
     # Traefik CRDs are now included in the Helm chart
     log_info "Traefik CRDs will be installed with the Helm chart..."
@@ -894,7 +914,7 @@ show_next_steps() {
     echo "  3. Access Grafana: http://localhost:3000 (admin/admin123)"
     echo "  4. Access LocalStack: http://localhost:4566 (DynamoDB Local)"
     echo "  5. Access NATS: http://localhost:4222 (Messaging)"
-    echo "  6. Connect Telepresence: make telepresence-connect"
+    echo "  6. Use mirrord for local development: make mirrord-connect"
     echo
     echo -e "${BLUE}🌐 Local Domains (if configured):${NC}"
     echo "  - Main App: https://raidhelper.local:8443"
@@ -903,14 +923,14 @@ show_next_steps() {
     echo
     echo -e "${BLUE}📚 Documentation:${NC}"
     echo "  - Local domains: docs/local-domains.md"
-    echo "  - Telepresence guide: docs/telepresence.md"
+    echo "  - mirrord guide: docs/mirrord.md"
     echo "  - Troubleshooting: docs/troubleshooting.md"
     echo
     echo -e "${BLUE}🔧 Common Commands:${NC}"
     echo "  - make port-forwards        # Start all port-forwards"
     echo "  - make port-forwards-stop   # Stop all port-forwards"
-    echo "  - make telepresence-connect # Connect Telepresence"
-    echo "  - make telepresence-disconnect # Disconnect Telepresence"
+    echo "  - make mirrord-connect      # Show mirrord usage"
+    echo "  - make mirrord-status       # Show available targets"
     echo "  - make tunnel               # Start ephemeral tunnel"
     echo "  - make tunnel-stop          # Stop ephemeral tunnel"
     echo "  - make delete               # Delete minikube cluster"

@@ -1,5 +1,5 @@
-# Simple Loki configuration for chart version 2.10.2
-# Minimal configuration to avoid PodSecurityPolicy issues
+# Simple Loki configuration for chart version 6.40.0
+# Single binary mode for local development
 
 # Disable PodSecurityPolicy (deprecated in newer Kubernetes versions)
 rbac:
@@ -9,47 +9,36 @@ rbac:
 podSecurityPolicy:
   enabled: false
 
-# Promtail is now deployed as a separate chart
+# Deployment mode - single binary for local development
+deploymentMode: SingleBinary
 
-# Basic Loki configuration
+# Basic Loki configuration for 6.x
 loki:
-  config: |
-    auth_enabled: false
-    server:
-      http_listen_port: 3100
-      grpc_listen_port: 9095
-
-    ingester:
-      lifecycler:
-        address: 127.0.0.1
-        ring:
-          kvstore:
-            store: inmemory
-          replication_factor: 1
-        final_sleep: 0s
-
-    schema_config:
-      configs:
-        - from: 2020-10-24
-          store: boltdb-shipper
-          object_store: filesystem
-          schema: v11
-          index:
-            prefix: index_
-            period: 24h
-
-    storage_config:
-      boltdb_shipper:
-        active_index_directory: /var/loki/boltdb-shipper-active
-        cache_location: /var/loki/boltdb-shipper-cache
-        shared_store: filesystem
-      filesystem:
-        directory: /var/loki/chunks
-
-    limits_config:
-      enforce_metric_name: false
-      reject_old_samples: true
-      reject_old_samples_max_age: 168h
+  # Use test schema for local development (no persistence)
+  useTestSchema: true
+  
+  # Storage configuration for local development
+  storage:
+    bucketNames:
+      chunks: loki-chunks
+      ruler: loki-ruler
+      admin: loki-admin
+      compactor: loki-compactor
+      indexGateway: loki-index-gateway
+      bloomGateway: loki-bloom-gateway
+      bloomCompactor: loki-bloom-compactor
+      bloomBuilder: loki-bloom-builder
+      bloomPlanner: loki-bloom-planner
+      overridesExporter: loki-overrides-exporter
+      patternIngester: loki-pattern-ingester
+      read: loki-read
+      write: loki-write
+      backend: loki-backend
+      queryFrontend: loki-query-frontend
+      queryScheduler: loki-query-scheduler
+      querier: loki-querier
+      ingester: loki-ingester
+      distributor: loki-distributor
 
 # Promtail already disabled above
 
@@ -62,11 +51,26 @@ service:
 persistence:
   enabled: false
 
-# Resource limits
+# Resource limits - reduced for local development
 resources:
   limits:
-    cpu: 1000m
-    memory: 1Gi
+    cpu: 500m
+    memory: 512Mi
   requests:
     cpu: 100m
     memory: 128Mi
+
+# Override cache resource requirements
+chunksCache:
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      memory: 256Mi
+
+resultsCache:
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      memory: 128Mi

@@ -9,8 +9,6 @@ repositories:
     url: https://grafana.github.io/helm-charts
   - name: jetstack
     url: https://charts.jetstack.io
-  - name: telepresence
-    url: https://app.getambassador.io
   - name: nats
     url: https://nats-io.github.io/k8s/helm/charts
   - name: localstack
@@ -58,7 +56,7 @@ releases:
   - name: nats
     namespace: nats
     chart: nats/nats
-    version: 1.3.13
+    version: 1.3.14
     createNamespace: true
     values:
       - nats-values.yaml
@@ -67,7 +65,7 @@ releases:
   - name: nats-surveyor
     namespace: nats
     chart: nats/surveyor
-    version: 0.20.3
+    version: 0.20.4
     createNamespace: true
     values:
       - nats-surveyor-values.yaml
@@ -80,7 +78,7 @@ releases:
   - name: prometheus
     namespace: monitoring
     chart: prometheus-community/prometheus
-    version: 27.37.0
+    version: 27.38.0
     createNamespace: true
     values:
       - prometheus-values.yaml
@@ -89,7 +87,7 @@ releases:
   - name: grafana
     namespace: monitoring
     chart: grafana/grafana
-    version: 9.4.4
+    version: 10.0.0
     createNamespace: true
     values:
       - grafana-values.yaml
@@ -100,7 +98,7 @@ releases:
   - name: tempo
     namespace: monitoring
     chart: grafana/tempo
-    version: 1.7.1
+    version: 1.23.3
     createNamespace: true
     values:
       - tempo-values.yaml
@@ -109,7 +107,7 @@ releases:
   - name: loki
     namespace: monitoring
     chart: grafana/loki
-    version: 2.10.2
+    version: 6.40.0
     createNamespace: true
     values:
       - loki-values-simple.yaml
@@ -129,19 +127,10 @@ releases:
   - name: argo
     namespace: argocd
     chart: argo/argo-cd
-    version: 8.3.5
+    version: 8.5.3
     createNamespace: true
     values:
       - argocd-values.yaml
-
-  # Telepresence (local development)
-  - name: traffic-manager
-    namespace: telepresence
-    chart: telepresence/telepresence
-    version: 2.18.0
-    createNamespace: true
-    values:
-      - telepresence-values.yaml
 
   # LocalStack (includes DynamoDB Local)
   - name: localstack

@@ -164,9 +164,9 @@ TUNNEL_URL=$TUNNEL_HOSTNAME
 TWITCH_REDIRECT_URI=https://$TUNNEL_HOSTNAME/oauth/twitch
 HOST=$TUNNEL_HOSTNAME
 
-# API and WebSocket URLs for Next.js
-NEXT_PUBLIC_API_URL=http://localhost:8082
-NEXT_PUBLIC_WS_URL=ws://localhost:8083
+# API and WebSocket URLs for Next.js (use Kubernetes service names for cluster communication)
+NEXT_PUBLIC_API_URL=http://raidhelper-api-service.apps.svc.cluster.local:8080
+NEXT_PUBLIC_WS_URL=ws://raidhelper-realtime-service.apps.svc.cluster.local:8080
 
 # Twitch OAuth configuration
 TWITCH_CLIENT_ID=5svgsqtpx6xa538w6mz0lzev46btb9

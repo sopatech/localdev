@@ -114,76 +114,69 @@ kubectl logs deployment/grafana -n monitoring
 kubectl get secret grafana -n monitoring -o jsonpath="{.data.admin-password}" | base64 -d
 ```
 
-## Telepresence Issues
+## mirrord Issues
 
 ### Cannot Connect to Cluster
 
-**Symptoms**: `telepresence connect` fails
+**Symptoms**: `mirrord exec` fails to connect
 
 **Solutions**:
 ```bash
 # Check kubectl connectivity
 kubectl cluster-info
 
-# Reset Telepresence
-telepresence quit
-rm -rf ~/.cache/telepresence
-telepresence connect
+# Verify cluster access
+kubectl get pods -n apps
 
-# Check Telepresence traffic manager
-kubectl get pods -n telepresence
+# Check mirrord installation
+mirrord --version
 
-# Reinstall traffic manager
-telepresence uninstall --everything
-telepresence helm install
+# Try with explicit target
+mirrord exec --target <service-name> --namespace apps <your-command>
 
-# Check firewall/proxy settings
-telepresence status
+# Check service exists
+kubectl get service <service-name> -n apps
 ```
 
-### Intercept Fails
+### Service Not Found
 
-**Symptoms**: `telepresence intercept` command fails
+**Symptoms**: `mirrord exec` can't find target service
 
 **Solutions**:
 ```bash
-# Check service exists
-kubectl get service <service-name> -n <namespace>
-
 # List available services
-telepresence list --namespace <namespace>
+kubectl get services -n apps
 
-# Check service has proper labels
-kubectl describe service <service-name> -n <namespace>
+# Check service is running
+kubectl get pods -n apps
 
-# Try intercept with specific port mapping
-telepresence intercept <service-name> --namespace <namespace> --port 8080:8081
+# Use explicit target
+mirrord exec --target raidhelper-api --namespace apps go run ./cmd/api
 
-# Check for port conflicts
-lsof -i :<local-port>
+# Check service labels
+kubectl describe service <service-name> -n apps
 ```
 
 ### Local Service Not Receiving Traffic
 
-**Symptoms**: Intercept created but local service gets no requests
+**Symptoms**: mirrord connected but local service gets no requests
 
 **Solutions**:
 ```bash
-# Verify intercept is active
-telepresence list
-
-# Check intercept conditions
-telepresence intercept <service-name> --namespace <namespace> --port <port> --http-header X-Test=value
-
-# Test with correct headers
-curl -H "X-Test: value" http://<service-url>
+# Verify mirrord is running
+ps aux | grep mirrord
 
 # Check local service is listening
 netstat -ln | grep <local-port>
 
-# Verify environment variables
-telepresence intercept <service-name> --namespace <namespace> --port <port> --env-file env.txt
-cat env.txt
+# Test with curl
+curl http://localhost:<local-port>/health
+
+# Check mirrord logs
+# mirrord logs are shown in the terminal where you ran the command
+
+# Try with different target
+mirrord exec --target <different-service> --namespace apps <your-command>
 ```
 
 ## Networking Issues
@@ -331,8 +324,8 @@ kubectl get configmap raidhelper-api-config -n raidhelper-prod -o yaml
 
 **Solutions**:
 ```bash
-# Verify intercept is active
-telepresence list
+# Check mirrord is running
+ps aux | grep mirrord
 
 # Check local service is running
 ps aux | grep <your-service>
@@ -349,13 +342,10 @@ env | grep <relevant-vars>
 
 ### Debugging Not Working
 
-**Symptoms**: Cannot attach debugger to intercepted service
+**Symptoms**: Cannot attach debugger to local service
 
 **Solutions**:
 ```bash
-# Ensure debugger port is forwarded
-telepresence intercept <service> --namespace <namespace> --port 8080:8080,40000:40000
-
 # Start service with debug flags
 dlv debug --headless --listen=:40000 --api-version=2 ./cmd/api
 
@@ -363,6 +353,9 @@ dlv debug --headless --listen=:40000 --api-version=2 ./cmd/api
 
 # Check firewall isn't blocking debug port
 lsof -i :40000
+
+# Use mirrord with debug port
+mirrord exec --target <service> --namespace apps dlv debug --headless --listen=:40000 --api-version=2 ./cmd/api
 ```
 
 ## Performance Issues
@@ -422,8 +415,8 @@ When all else fails:
 
 ```bash
 # Stop everything
-telepresence quit
 pkill -f "kubectl port-forward"
+pkill -f "mirrord"
 
 # Reset minikube
 minikube stop
@@ -440,8 +433,8 @@ docker system prune -a
 
 ```bash
 # Stop services
-telepresence quit
 pkill -f "kubectl port-forward"
+pkill -f "mirrord"
 
 # Reset infrastructure
 cd infrastructure
@@ -510,7 +503,7 @@ kubectl get services -A -o yaml > debug-logs/services.yaml
 
 - **Kubernetes Slack**: https://slack.k8s.io/
 - **ArgoCD GitHub Issues**: https://github.com/argoproj/argo-cd/issues
-- **Telepresence GitHub Issues**: https://github.com/telepresenceio/telepresence/issues
+- **mirrord GitHub Issues**: https://github.com/metalbear-co/mirrord/issues
 - **Linkerd GitHub Issues**: https://github.com/linkerd/linkerd2/issues
 
 Remember: Always check the logs first - they usually contain the most helpful information for debugging!

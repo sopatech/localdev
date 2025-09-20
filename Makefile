@@ -1,6 +1,6 @@
 # RaidHelper Local Development Environment Makefile
 
-.PHONY: help setup delete setup-private-repos telepresence-connect telepresence-disconnect port-forwards port-forwards-stop tunnel tunnel-restart tunnel-stop tunnel-status tunnel-apply cert-create cert-cleanup cert-status
+.PHONY: help setup delete setup-private-repos mirrord-connect mirrord-status port-forwards port-forwards-stop tunnel tunnel-restart tunnel-stop tunnel-status tunnel-apply cert-create cert-cleanup cert-status
 
 # Default target
 help: ## Show this help message
@@ -19,14 +19,21 @@ delete: ## Delete minikube cluster
 	@echo "💥 Deleting minikube cluster..."
 	@minikube delete
 
-# Telepresence
-telepresence-connect: ## Connect telepresence to cluster
-	@echo "🔗 Connecting Telepresence..."
-	@telepresence connect
+# mirrord (Local Development)
+mirrord-connect: ## Connect mirrord to cluster for local development
+	@echo "🔗 Connecting mirrord..."
+	@echo "Usage: mirrord exec <your-command>"
+	@echo "Example: mirrord exec go run ./cmd/api"
+	@echo "Example: mirrord exec --target deployment/raidhelper-api --target-namespace apps go run ./cmd/api"
 
-telepresence-disconnect: ## Disconnect telepresence
-	@echo "🔌 Disconnecting Telepresence..."
-	@telepresence quit
+mirrord-status: ## Show mirrord status and available targets
+	@echo "📊 mirrord Status:"
+	@kubectl get pods -n apps
+	@echo ""
+	@echo "Available targets:"
+	@echo "  - raidhelper-api"
+	@echo "  - raidhelper-realtime" 
+	@echo "  - raidhelper-web"
 
 # Port Forwards
 port-forwards: ## Start all port forwards
